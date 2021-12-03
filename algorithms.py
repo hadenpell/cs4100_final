@@ -45,17 +45,19 @@ class semi_gradient_sarsa:
             return action
         else:
             action = []
-            for i in (self.num_branches):
+            for b in (self.num_branches):
                 action_scores = []
-                for i in range(self.num_actions)
-                    action_scores.append(self.q_hat(state, i))
+                for a in range(self.num_actions)
+                    action_scores.append(self.q_hat(state, b, a))
                 bestScore = max(action_scores)
                 bestIndices = [index for index in range(len(action_scores)) if action_scores[index] == bestScore]
                 action.append(random.choice(bestIndices))
             return action
 
-    def q_hat(self, state, action):
-        ... ## WEIGHT DOT PRODUCT OF FEATURE VECTOR
+    def q_hat(self, state, branch, action):
+        return self.weights[branch][action].dot(self.get_features(state, branch, action))
+        # WE WILL NEED TO CHANGE HOW TO INCORPARATE THE ACTION INTO THE GET FEATURES. HERE IT NEEDS TO BE 1D VECTOR
 
+    #WILL FEATURES BE WITH A STATE, BRANCH, ACTION OR A STATE ACTION WHERE ACTION IS A TUPLE, VERY CONFUSING HARD TO TELL
     def grad_q_hat(self, state, action):
-        return self.get_features(state, action)
+        return self.get_features(state, branch, action)
