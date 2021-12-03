@@ -1,5 +1,6 @@
 import mlagents
 
+from algorithms import semi_gradient_sarsa
 from mlagents_envs.environment import UnityEnvironment as UE
 
 if __name__ == "__main__":
@@ -8,6 +9,15 @@ if __name__ == "__main__":
     # Learning Parameters
     MAX_EPISODES = 10
     MAX_STEPS    = 2000
+    GAMMA        = .99
+    EPSILON      = .1
+    STEP_SIZE    = .1
+    ######GET FEATURES
+    NUM_FEATURES = 1
+    NUM_BRANCHES = 3
+    NUM_ACTIONS = 3
+
+    model = semi_gradient_sarsa(env, MAX_EPISODES, GAMMA, EPSILON, STEP_SIZE, """GET FEAUTRES""", NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
 
     # Environment Constants
     env.reset()
