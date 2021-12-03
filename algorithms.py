@@ -40,11 +40,19 @@ class semi_gradient_sarsa:
     def get_action(self, state, num_agents, spec):
         if np.random.random() < self.epsilon:
             action = []
-            for i in (self.num_branches):
+            for _ in (self.num_branches):
                 action.append(random.randInt(0, (self.num_actions-1)))
             return action
         else:
-            ...
+            action = []
+            for i in (self.num_branches):
+                action_scores = []
+                for i in range(self.num_actions)
+                    action_scores.append(self.q_hat(state, i))
+                bestScore = max(action_scores)
+                bestIndices = [index for index in range(len(action_scores)) if action_scores[index] == bestScore]
+                action.append(random.choice(bestIndices))
+            return action
 
     def q_hat(self, state, action):
         ... ## WEIGHT DOT PRODUCT OF FEATURE VECTOR
