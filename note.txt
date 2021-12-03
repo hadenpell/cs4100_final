@@ -1,0 +1,13 @@
+To represent notes on what we have learned.
+
+behavior_specs. Represents a list where each index is a team. And the index
+represents the specs about some team.
+
+decision_steps, terminal_steps = env.get_steps(behavior_name)
+decision_steps represent an array of the agent ID's in the order that they 
+request an actions
+
+terminal_steps represents an array of agent id's that are agents in terminal
+states. This means we can just check if our tracked agent is in the steps if so
+we can set done to true. 
+
