@@ -61,3 +61,6 @@ class semi_gradient_sarsa:
     #WILL FEATURES BE WITH A STATE, BRANCH, ACTION OR A STATE ACTION WHERE ACTION IS A TUPLE, VERY CONFUSING HARD TO TELL
     def grad_q_hat(self, state, action):
         return self.get_features(state, branch, action)
+
+    def perform_learning():
+        ...
