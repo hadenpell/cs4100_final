@@ -1,8 +1,0 @@
-numpy
-matplotlib
-ipywidgets
-jupyter
-more_itertools
-torch
-tqdm
-gym[box2d]
