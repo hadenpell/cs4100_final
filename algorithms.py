@@ -100,6 +100,7 @@ class semi_gradient_sarsa:
                     done = True
                 if tracked_agent in decision_steps:
                     reward = decision_steps[tracked_agent].reward
+                    print("D R: ", reward)
                     episode_rewards += reward
                     next_features = decision_steps.obs[0][0]
                     next_team1_action = self.get_action(next_features, 1, TEAM1_SPEC)
@@ -107,4 +108,5 @@ class semi_gradient_sarsa:
                         self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*features
                 step += 1
         self.env.close()
-        
+        print("HERE ARE THE LEARNED WEIGHTS \n\n")
+        print(self.weights)

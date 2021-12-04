@@ -8,7 +8,7 @@ if __name__ == "__main__":
     
     # Learning Parameters
     MAX_EPISODES = 10
-    MAX_STEPS    = 2000
+    MAX_STEPS    = 1_500_000
     GAMMA        = .99
     EPSILON      = .1
     STEP_SIZE    = .1
