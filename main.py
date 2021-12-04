@@ -10,45 +10,13 @@ if __name__ == "__main__":
     MAX_EPISODES = 10
     MAX_STEPS    = 2000
     GAMMA        = .99
-    EPSILON      = .1
+    EPSILON      = 1
     STEP_SIZE    = .1
     ######GET FEATURES
     NUM_FEATURES = 1
     NUM_BRANCHES = 3
     NUM_ACTIONS = 3
 
-    model = semi_gradient_sarsa(env, MAX_EPISODES, GAMMA, EPSILON, STEP_SIZE, """GET FEAUTRES""", NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
+    model = semi_gradient_sarsa(env, MAX_EPISODES, MAX_STEPS, GAMMA, EPSILON, STEP_SIZE, 'placeholder', NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
 
-    # Environment Constants
-    env.reset()
-    TEAM1 = list(env.behavior_specs)[0]
-    TEAM1_SPEC = env.behavior_specs[TEAM1]
-
-    for episode in range(MAX_EPISODES):
-        env.reset()
-        decision_steps, terminal_steps = env.get_steps(TEAM1)
-        done = False
-        episode_rewards = 0 # Rewards of the tracked_agent (US)
-        step = 0
-        while not done and step < MAX_STEPS:
-            #print("Current Episode: ", episode, " Current Step: ", step)
-
-            # Grab our agent
-            tracked_agent = decision_steps.agent_id[0]
-            # Determine actions for each team
-            team1_action = TEAM1_SPEC.action_spec.random_action(len(decision_steps))
-            # Set actions
-            env.set_actions(TEAM1, team1_action)
-            # Move simulation forward
-            env.step()
-            # Check new simulation
-            decision_steps, terminal_steps = env.get_steps(TEAM1)
-            if tracked_agent in decision_steps: # The agent request a decision
-                episode_rewards += decision_steps[tracked_agent].reward
-            if tracked_agent in terminal_steps: # The game has reached a terminal state
-                episode_rewards += terminal_steps[tracked_agent].reward
-                done = True
-                print("Our agent received a total reward of ", episode_rewards, " for episode: ", episode)
-            step += 1 
-    env.close()
-    print("Closed Environment")
+    model.perform_learning()
