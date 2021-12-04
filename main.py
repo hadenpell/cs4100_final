@@ -10,10 +10,10 @@ if __name__ == "__main__":
     MAX_EPISODES = 10
     MAX_STEPS    = 2000
     GAMMA        = .99
-    EPSILON      = 1
+    EPSILON      = .1
     STEP_SIZE    = .1
     ######GET FEATURES
-    NUM_FEATURES = 1
+    NUM_FEATURES = 9
     NUM_BRANCHES = 3
     NUM_ACTIONS = 3
 

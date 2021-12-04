@@ -1,6 +1,9 @@
 import numpy as np
 import random
 
+import mlagents
+from mlagents_envs.base_env import ActionTuple
+
 class semi_gradient_sarsa:
     """Semi-gradient SARSA algorithm."""
     def __init__(self, env, num_episodes, num_steps, gamma, epsilon, step_size, get_features, num_features, num_branches, num_actions):
@@ -39,30 +42,28 @@ class semi_gradient_sarsa:
                 branch_weights.append(np.zeros(self.num_features))
             self.weights.append(branch_weights)
 
-    def get_action(self, state, num_agents, spec):
+    def get_action(self, features, num_agents, spec):
         if np.random.random() < self.epsilon:
             action = []
-            for _ in range(self.num_branches):
+            for b in range(self.num_branches):
                 action.append(random.randint(0, (self.num_actions-1)))
-            return tuple(action)
+            action = np.array([action])
+            return ActionTuple(discrete=action)
         else:
             action = []
             for b in range(self.num_branches):
                 action_scores = []
                 for a in range(self.num_actions):
-                    action_scores.append(self.q_hat(state, b, a))
+                    action_scores.append(self.q_hat(features, b, a))
                 bestScore = max(action_scores)
                 bestIndices = [index for index in range(len(action_scores)) if action_scores[index] == bestScore]
                 action.append(random.choice(bestIndices))
-            return tuple(action)
+            action = np.array([action])
+            return ActionTuple(discrete=action)
 
-    def q_hat(self, state, branch, action):
-        return self.weights[branch][action].dot(self.get_features(state, branch, action))
+    def q_hat(self, features, branch, action):
+        return self.weights[branch][action].dot(features)
         # WE WILL NEED TO CHANGE HOW TO INCORPARATE THE ACTION INTO THE GET FEATURES. HERE IT NEEDS TO BE 1D VECTOR
-
-    #WILL FEATURES BE WITH A STATE, BRANCH, ACTION OR A STATE ACTION WHERE ACTION IS A TUPLE, VERY CONFUSING HARD TO TELL
-    def grad_q_hat(self, state, action):
-        return self.get_features(state, branch, action)
 
     def perform_learning(self):
         self.env.reset()
@@ -79,12 +80,10 @@ class semi_gradient_sarsa:
                 tracked_agent = decision_steps.agent_id[0]
 
                 #CREATE FEATURE VECTOR
-                """
-                #######################
-                """
+                features = decision_steps.obs[0][0]
 
                 #determine actions for each team
-                team1_action = self.get_action([], 1, TEAM1_SPEC)
+                team1_action = self.get_action(features, 1, TEAM1_SPEC)
                 #Set actions
                 self.env.set_actions(TEAM1, team1_action)
                 #Move simulation forward
@@ -93,13 +92,19 @@ class semi_gradient_sarsa:
                 decision_steps, terminal_steps = self.env.get_steps(TEAM1)
 
                 if tracked_agent in terminal_steps:
-                    episode_rewards += terminal_steps[tracked_agent].reward
+                    reward = terminal_steps[tracked_agent].reward
+                    episode_rewards += reward
                     print("Our agent received a total reward of ", episode_rewards, " for episode: ", episode)
-                    #####UPDATE WEIGHT VALUES
+                    for b in range(self.num_branches):
+                        self.weights[b] = self.weights[b] + self.step_size * (reward - self.q_hat(features, b, team1_action.discrete[0][b]))*features
                     done = True
-                if tracked_agent in decision_steps: 
-                    episode_rewards += decision_steps[tracked_agent].reward
-                    #####UPDATE WEIGHT VALUES
+                if tracked_agent in decision_steps:
+                    reward = decision_steps[tracked_agent].reward
+                    episode_rewards += reward
+                    next_features = decision_steps.obs[0][0]
+                    next_team1_action = self.get_action(next_features, 1, TEAM1_SPEC)
+                    for b in range(self.num_branches):
+                        self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*features
                 step += 1
         self.env.close()
         
