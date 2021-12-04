@@ -3,10 +3,11 @@ import random
 
 import mlagents
 from mlagents_envs.base_env import ActionTuple
+from mlagents_envs.environment import UnityEnvironment as UE
 
 class semi_gradient_sarsa:
     """Semi-gradient SARSA algorithm."""
-    def __init__(self, env, num_episodes, num_steps, gamma, epsilon, step_size, get_features, num_features, num_branches, num_actions):
+    def __init__(self, num_episodes, num_steps, gamma, epsilon, step_size, get_features, num_features, num_branches, num_actions):
         """
         Initialize Semi-gradient SARSA algorithm
 
@@ -21,7 +22,7 @@ class semi_gradient_sarsa:
             num_features: The number of features in the feature vector
             num_actions: Number of actions available for the agent to take
         """
-        self.env = env
+        self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
         self.num_episodes = num_episodes
         self.num_steps = num_steps
         self.gamma = gamma
@@ -69,15 +70,19 @@ class semi_gradient_sarsa:
         self.env.reset()
         TEAM1 = list(self.env.behavior_specs)[0]
         TEAM1_SPEC = self.env.behavior_specs[TEAM1]
+        self.env.close()
         for episode in range(self.num_episodes):
+            self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
             self.env.reset()
+            TEAM1 = list(self.env.behavior_specs)[0]
+            TEAM1_SPEC = self.env.behavior_specs[TEAM1]
             decision_steps, terminal_steps = self.env.get_steps(TEAM1)
             done = False
             episode_rewards = 0 #Rewards of the tracked_agent (US)
             step = 0
             while not done and step < self.num_steps:
-                print("Episode: ", episode, " Step: ", step)
-                
+                print("Episode: ", episode, " Steps: ", step)
+
                 #grab our agent
                 tracked_agent = decision_steps.agent_id[0]
 
@@ -102,13 +107,12 @@ class semi_gradient_sarsa:
                     done = True
                 if tracked_agent in decision_steps:
                     reward = decision_steps[tracked_agent].reward
-                    print("D R: ", reward)
                     episode_rewards += reward
                     next_features = decision_steps.obs[0][0]
                     next_team1_action = self.get_action(next_features, 1, TEAM1_SPEC)
                     for b in range(self.num_branches):
                         self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*features
                 step += 1
-        self.env.close()
+            self.env.close()
         print("HERE ARE THE LEARNED WEIGHTS \n\n")
         print(self.weights)
