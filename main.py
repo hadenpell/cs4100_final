@@ -4,14 +4,14 @@ from algorithms import semi_gradient_sarsa
 from mlagents_envs.environment import UnityEnvironment as UE
 
 if __name__ == "__main__":
-    env = UE(file_name='AIUnityProject', seed=1, side_channels=[])
+    env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
     
     # Learning Parameters
     MAX_EPISODES = 10
     MAX_STEPS    = 1_500_000
     GAMMA        = .99
     EPSILON      = .1
-    STEP_SIZE    = .1
+    STEP_SIZE    = .001
     ######GET FEATURES
     NUM_FEATURES = 9
     NUM_BRANCHES = 3

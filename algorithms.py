@@ -76,6 +76,8 @@ class semi_gradient_sarsa:
             episode_rewards = 0 #Rewards of the tracked_agent (US)
             step = 0
             while not done and step < self.num_steps:
+                print("Episode: ", episode, " Step: ", step)
+                
                 #grab our agent
                 tracked_agent = decision_steps.agent_id[0]
 
