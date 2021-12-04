@@ -16,6 +16,8 @@ if __name__ == "__main__":
     NUM_BRANCHES = 3
     NUM_ACTIONS = 3
 
+   
+
     model = semi_gradient_sarsa(MAX_EPISODES, MAX_STEPS, GAMMA, EPSILON, STEP_SIZE, 'placeholder', NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
 
     model.perform_learning()

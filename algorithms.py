@@ -22,7 +22,8 @@ class semi_gradient_sarsa:
             num_features: The number of features in the feature vector
             num_actions: Number of actions available for the agent to take
         """
-        self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
+        #self.env = env
+        self.reset_env()
         self.num_episodes = num_episodes
         self.num_steps = num_steps
         self.gamma = gamma
@@ -33,6 +34,9 @@ class semi_gradient_sarsa:
         self.num_branches = num_branches
         self.num_actions = num_actions
         self.reset_weights()
+
+    def reset_env(self):
+        self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
 
     def reset_weights(self):
         #one vector of weights for each action
@@ -72,7 +76,7 @@ class semi_gradient_sarsa:
         TEAM1_SPEC = self.env.behavior_specs[TEAM1]
         self.env.close()
         for episode in range(self.num_episodes):
-            self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
+            self.reset_env()
             self.env.reset()
             TEAM1 = list(self.env.behavior_specs)[0]
             TEAM1_SPEC = self.env.behavior_specs[TEAM1]
@@ -88,6 +92,7 @@ class semi_gradient_sarsa:
 
                 #CREATE FEATURE VECTOR
                 features = decision_steps.obs[0][0]
+                print(features)
 
                 #determine actions for each team
                 team1_action = self.get_action(features, 1, TEAM1_SPEC)
@@ -113,6 +118,7 @@ class semi_gradient_sarsa:
                     for b in range(self.num_branches):
                         self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*features
                 step += 1
-            self.env.close()
+            print("Episode: ", episode, " Reward: ", episode_rewards)
+        self.env.close()
         print("HERE ARE THE LEARNED WEIGHTS \n\n")
         print(self.weights)
