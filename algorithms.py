@@ -7,7 +7,7 @@ from mlagents_envs.environment import UnityEnvironment as UE
 
 class semi_gradient_sarsa:
     """Semi-gradient SARSA algorithm."""
-    def __init__(self, num_episodes, num_steps, gamma, epsilon, step_size, get_features, num_features, num_branches, num_actions):
+    def __init__(self, file_name, num_episodes, num_steps, gamma, start_epsilon, end_epsilon, step_size, get_features, num_features, num_branches, num_actions):
         """
         Initialize Semi-gradient SARSA algorithm
 
@@ -23,11 +23,14 @@ class semi_gradient_sarsa:
             num_actions: Number of actions available for the agent to take
         """
         #self.env = env
+        self.file_name = file_name
         self.reset_env()
         self.num_episodes = num_episodes
         self.num_steps = num_steps
         self.gamma = gamma
-        self.epsilon = epsilon
+        self.epsilon = start_epsilon
+        self.end_epsilon = end_epsilon
+        self.step_epsilon = (start_epsilon - end_epsilon) / self.num_episodes
         self.step_size = step_size
         self.get_features = get_features
         self.num_features = num_features
@@ -36,7 +39,7 @@ class semi_gradient_sarsa:
         self.reset_weights()
 
     def reset_env(self):
-        self.env = UE(file_name='AIUnityProjectNoRotate', seed=1, side_channels=[])
+        self.env = UE(self.file_name, seed=1, side_channels=[], worker_id=2, no_graphics=True)
 
     def reset_weights(self):
         #one vector of weights for each action
@@ -44,7 +47,7 @@ class semi_gradient_sarsa:
         for branch in range(self.num_branches):
             branch_weights = []
             for action in range(self.num_actions):
-                branch_weights.append(np.zeros(self.num_features))
+                branch_weights.append(np.random.random(self.num_features))
             self.weights.append(branch_weights)
 
     def get_action(self, features, num_agents, spec):
@@ -67,6 +70,14 @@ class semi_gradient_sarsa:
             return ActionTuple(discrete=action)
 
     def q_hat(self, features, branch, action):
+        action_1 = np.array([0, 0, 0])
+        action_2 = np.array([0, 0, 0])
+        if branch == 0:
+            action_1[action] = 1
+        elif branch == 1:
+            action_2[action] = 1
+        features = np.append(features, action_1)
+        features = np.append(features, action_2)
         return self.weights[branch][action].dot(features)
         # WE WILL NEED TO CHANGE HOW TO INCORPARATE THE ACTION INTO THE GET FEATURES. HERE IT NEEDS TO BE 1D VECTOR
 
@@ -75,6 +86,8 @@ class semi_gradient_sarsa:
         TEAM1 = list(self.env.behavior_specs)[0]
         TEAM1_SPEC = self.env.behavior_specs[TEAM1]
         self.env.close()
+        steps_per_episode = []
+        rewards_per_episode = []
         for episode in range(self.num_episodes):
             self.reset_env()
             self.env.reset()
@@ -85,17 +98,22 @@ class semi_gradient_sarsa:
             episode_rewards = 0 #Rewards of the tracked_agent (US)
             step = 0
             while not done and step < self.num_steps:
-                print("Episode: ", episode, " Steps: ", step)
 
                 #grab our agent
                 tracked_agent = decision_steps.agent_id[0]
 
                 #CREATE FEATURE VECTOR
                 features = decision_steps.obs[0][0]
-                print(features)
-
                 #determine actions for each team
                 team1_action = self.get_action(features, 1, TEAM1_SPEC)
+                '''
+                action_1 = np.array([0, 0, 0])
+                action_2 = np.array([0, 0, 0])
+                action_1[team1_action.discrete[0][0]] = 1
+                action_2[team1_action.discrete[0][1]] = 1
+                features = np.append(features, action_1)
+                features = np.append(features, action_2)
+                '''
                 #Set actions
                 self.env.set_actions(TEAM1, team1_action)
                 #Move simulation forward
@@ -108,17 +126,39 @@ class semi_gradient_sarsa:
                     episode_rewards += reward
                     print("Our agent received a total reward of ", episode_rewards, " for episode: ", episode)
                     for b in range(self.num_branches):
-                        self.weights[b] = self.weights[b] + self.step_size * (reward - self.q_hat(features, b, team1_action.discrete[0][b]))*features
+                        action_1 = np.array([0, 0, 0])
+                        action_2 = np.array([0, 0, 0])
+                        action_1[team1_action.discrete[0][0]] = 1
+                        action_2[team1_action.discrete[0][1]] = 1
+                        feature_vector = np.append(features, action_1)
+                        feature_vector = np.append(feature_vector, action_2)
+                        self.weights[b] = self.weights[b] + self.step_size * (reward - self.q_hat(features, b, team1_action.discrete[0][b]))*feature_vector
                     done = True
                 if tracked_agent in decision_steps:
                     reward = decision_steps[tracked_agent].reward
                     episode_rewards += reward
                     next_features = decision_steps.obs[0][0]
                     next_team1_action = self.get_action(next_features, 1, TEAM1_SPEC)
+                    """
+                    action_1 = np.array([0, 0, 0])
+                    action_2 = np.array([0, 0, 0])
+                    action_1[next_team1_action.discrete[0][0]] = 1
+                    action_2[next_team1_action.discrete[0][1]] = 1
+                    next_features = np.append(next_features, action_1)
+                    next_features = np.append(next_features, action_2)
+                    """
                     for b in range(self.num_branches):
-                        self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*features
+                        action_1 = np.array([0, 0, 0])
+                        action_2 = np.array([0, 0, 0])
+                        action_1[team1_action.discrete[0][0]] = 1
+                        action_2[team1_action.discrete[0][1]] = 1
+                        feature_vector = np.append(features, action_1)
+                        feature_vector = np.append(feature_vector, action_2)
+                        self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*feature_vector
                 step += 1
+            steps_per_episode.append(step)
+            rewards_per_episode.append(episode_rewards)
+            self.epsilon = self.epsilon + self.step_epsilon
             print("Episode: ", episode, " Reward: ", episode_rewards)
-        self.env.close()
-        print("HERE ARE THE LEARNED WEIGHTS \n\n")
-        print(self.weights)
+            self.env.close()
+        return steps_per_episode, rewards_per_episode, self.weights
