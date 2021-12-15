@@ -7,7 +7,7 @@ from mlagents_envs.environment import UnityEnvironment as UE
 
 class semi_gradient_sarsa:
     """Semi-gradient SARSA algorithm."""
-    def __init__(self, file_name, num_episodes, num_steps, gamma, start_epsilon, end_epsilon, step_size, get_features, num_features, num_branches, num_actions):
+    def __init__(self, file_name, num_episodes, num_steps, gamma, start_epsilon, end_epsilon, epsilon_end_step, step_size, get_features, num_features, num_branches, num_actions):
         """
         Initialize Semi-gradient SARSA algorithm
 
@@ -30,7 +30,8 @@ class semi_gradient_sarsa:
         self.gamma = gamma
         self.epsilon = start_epsilon
         self.end_epsilon = end_epsilon
-        self.step_epsilon = (start_epsilon - end_epsilon) / self.num_episodes
+        self.epsilon_end_step = epsilon_end_step
+        self.step_epsilon = (start_epsilon - end_epsilon) / epsilon_end_step
         self.step_size = step_size
         self.get_features = get_features
         self.num_features = num_features
@@ -39,7 +40,7 @@ class semi_gradient_sarsa:
         self.reset_weights()
 
     def reset_env(self):
-        self.env = UE(self.file_name, seed=1, side_channels=[], worker_id=2, no_graphics=True)
+        self.env = UE(self.file_name, seed=1, side_channels=[], worker_id=1, no_graphics=True)
 
     def reset_weights(self):
         #one vector of weights for each action
@@ -70,15 +71,8 @@ class semi_gradient_sarsa:
             return ActionTuple(discrete=action)
 
     def q_hat(self, features, branch, action):
-        action_1 = np.array([0, 0, 0])
-        action_2 = np.array([0, 0, 0])
-        if branch == 0:
-            action_1[action] = 1
-        elif branch == 1:
-            action_2[action] = 1
-        features = np.append(features, action_1)
-        features = np.append(features, action_2)
-        return self.weights[branch][action].dot(features)
+        feature_vector = self.get_features(features, branch, action)
+        return self.weights[branch][action].dot(feature_vector)
         # WE WILL NEED TO CHANGE HOW TO INCORPARATE THE ACTION INTO THE GET FEATURES. HERE IT NEEDS TO BE 1D VECTOR
 
     def perform_learning(self):
@@ -132,7 +126,7 @@ class semi_gradient_sarsa:
                         action_2[team1_action.discrete[0][1]] = 1
                         feature_vector = np.append(features, action_1)
                         feature_vector = np.append(feature_vector, action_2)
-                        self.weights[b] = self.weights[b] + self.step_size * (reward - self.q_hat(features, b, team1_action.discrete[0][b]))*feature_vector
+                        self.weights[b] = self.weights[b] + self.step_size * (reward - self.q_hat(features, b, team1_action.discrete[0][b]))*self.get_features(features, b, team1_action.discrete[0][b])
                     done = True
                 if tracked_agent in decision_steps:
                     reward = decision_steps[tracked_agent].reward
@@ -154,7 +148,7 @@ class semi_gradient_sarsa:
                         action_2[team1_action.discrete[0][1]] = 1
                         feature_vector = np.append(features, action_1)
                         feature_vector = np.append(feature_vector, action_2)
-                        self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*feature_vector
+                        self.weights[b] = self.weights[b] + self.step_size * (reward + self.gamma * self.q_hat(next_features, b, next_team1_action.discrete[0][b])  - self.q_hat(features, b, team1_action.discrete[0][b]))*self.get_features(features, b, team1_action.discrete[0][b])
                 step += 1
             steps_per_episode.append(step)
             rewards_per_episode.append(episode_rewards)
