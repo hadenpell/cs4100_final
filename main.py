@@ -19,14 +19,14 @@ if __name__ == "__main__":
     EPSILON_END_STEP = 500
     STEP_SIZE    = .01
     ######GET FEATURES
-    NUM_FEATURES = 15
+    NUM_FEATURES = 360012
     NUM_BRANCHES = 2
     NUM_ACTIONS = 3
-    FEATURE_VECTOR = "original"
+    FEATURE_VECTOR = "best"
 
    
 
-    model = semi_gradient_sarsa('NEW_build_originalFeatures/UnityEnvironment', MAX_EPISODES, MAX_STEPS, GAMMA, START_EPSILON, END_EPSILON, EPSILON_END_STEP, STEP_SIZE, create_get_features(FEATURE_VECTOR), NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
+    model = semi_gradient_sarsa('NEW_build_originalFeatures_addedVelocity/UnityEnvironment', MAX_EPISODES, MAX_STEPS, GAMMA, START_EPSILON, END_EPSILON, EPSILON_END_STEP, STEP_SIZE, create_get_features(FEATURE_VECTOR), NUM_FEATURES, NUM_BRANCHES, NUM_ACTIONS)
 
 
     steps_per_episode, rewards_per_episode, weights = model.perform_learning()

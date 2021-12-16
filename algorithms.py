@@ -40,7 +40,7 @@ class semi_gradient_sarsa:
         self.reset_weights()
 
     def reset_env(self):
-        self.env = UE(self.file_name, seed=1, side_channels=[], worker_id=1, no_graphics=True)
+        self.env = UE(self.file_name, seed=1, side_channels=[], worker_id=1, no_graphics=False)
 
     def reset_weights(self):
         #one vector of weights for each action
