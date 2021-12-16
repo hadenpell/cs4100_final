@@ -59,7 +59,7 @@ def create_get_features(types):
 
         return feature_vector
 
-    def onebyone_onehot_includeMore_special(observation, branch, action):
+    def onebyone_onehot_includeMore_overlapping(observation, branch, action):
         """
         One hot encoding of 1x1 tiles and action taken
         """
@@ -87,7 +87,7 @@ def create_get_features(types):
 
         return feature_vector
 
-    def best(observation, branch, action):
+    def everypossiblecombo(observation, branch, action):
         feature_vector = np.zeros(360000)
         player_z = observation[2] + 7.5
         player_x = observation[0] + 15
@@ -131,8 +131,8 @@ def create_get_features(types):
     elif types == "onebyone_onehot_includeMore":
         return onebyone_onehot_includeMore
     elif types == "onebyone_onehot_includeMore_special":
-        return onebyone_onehot_includeMore_special
+        return onebyone_onehot_includeMore_overlapping
     elif types == 'original':
         return original
     elif types == 'best':
-        return best
+        return everypossiblecombo
